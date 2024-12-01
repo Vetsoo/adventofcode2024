@@ -32,6 +32,18 @@ static class Program
 
         Console.WriteLine($"Sum of differences: {sum}");
 
+
+        Console.WriteLine($"Calculating similarity score...");
+
+        var similarityScore = 0;
+        foreach (var id in left)
+        {
+            var multiplier = right.Count(x => x == id);
+            similarityScore += id * multiplier;
+        }
+
+        Console.WriteLine($"Similarity score: {similarityScore}");
+
         return Task.CompletedTask;
     }
 }
