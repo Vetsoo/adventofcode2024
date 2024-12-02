@@ -5,7 +5,7 @@ static class Program
     static async Task Main(string[] args)
     {
         Console.WriteLine("Advent of code 2024!");
-        await Day2();
+        await Day2(true);
     }
 
     static Task Day1()
@@ -47,7 +47,7 @@ static class Program
         return Task.CompletedTask;
     }
 
-    static Task Day2()
+    static Task Day2(bool activateDampner = false)
     {
         Console.WriteLine("Welcome to the DAY 2!");
         Console.WriteLine("");
@@ -79,6 +79,40 @@ static class Program
                     break;
                 }
             }
+            if (!activateDampner && isNotSafe)
+                continue;
+            else if (activateDampner && isNotSafe)
+            {
+                // Brute forced, can be optimized probably
+                for (var i = 0; i < levels.Length; i++)
+                {
+                    var newLevels = string.Join(" ", levels.Where((_, j) => j != i).ToArray()).Split(' ');
+                    previousValue = int.Parse(newLevels[0]);
+                    isNotSafe = false;
+                    isDecreasing = false;
+                    for (int g = 1; g < newLevels.Length; g++)
+                    {
+                        var value = int.Parse(newLevels[g]);
+                        var diff = value - previousValue;
+
+                        previousValue = value;
+
+                        if (g == 1 && diff < 0)
+                            isDecreasing = true;
+
+                        if (diff == 0 || (diff < 0 && !isDecreasing) || (diff >= 0 && isDecreasing) || Math.Abs(diff) < minimumDiff || Math.Abs(diff) > maximumDiff)
+                        {
+                            isNotSafe = true;
+                            break;
+                        }
+                        isNotSafe = false;
+                    }
+
+                    if (!isNotSafe)
+                        break;
+                }
+            }
+
             if (isNotSafe)
                 continue;
 
