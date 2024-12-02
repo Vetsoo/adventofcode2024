@@ -5,7 +5,7 @@ static class Program
     static async Task Main(string[] args)
     {
         Console.WriteLine("Advent of code 2024!");
-        await Day1();
+        await Day2();
     }
 
     static Task Day1()
@@ -43,6 +43,49 @@ static class Program
         }
 
         Console.WriteLine($"Similarity score: {similarityScore}");
+
+        return Task.CompletedTask;
+    }
+
+    static Task Day2()
+    {
+        Console.WriteLine("Welcome to the DAY 2!");
+        Console.WriteLine("");
+        Console.WriteLine("Started reading input...");
+        var inputText = File.ReadAllLines(@"input/day2.txt");
+
+        var safeReports = 0;
+        var minimumDiff = 1;
+        var maximumDiff = 3;
+        foreach (var report in inputText)
+        {
+            var levels = report.Split(' ');
+            var previousValue = int.Parse(levels[0]);
+            var isNotSafe = false;
+            var isDecreasing = false;
+            for (int i = 1; i < levels.Length; i++)
+            {
+                var value = int.Parse(levels[i]);
+                var diff = value - previousValue;
+
+                previousValue = value;
+
+                if (i == 1 && diff < 0)
+                    isDecreasing = true;
+
+                if (diff == 0 || (diff < 0 && !isDecreasing) || (diff >= 0 && isDecreasing) || Math.Abs(diff) < minimumDiff || Math.Abs(diff) > maximumDiff)
+                {
+                    isNotSafe = true;
+                    break;
+                }
+            }
+            if (isNotSafe)
+                continue;
+
+            safeReports++;
+        }
+
+        Console.WriteLine($"Amount of safe reports: {safeReports}");
 
         return Task.CompletedTask;
     }
