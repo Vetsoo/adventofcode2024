@@ -7,7 +7,7 @@ static class Program
     static async Task Main(string[] args)
     {
         Console.WriteLine("Advent of code 2024!");
-        await Day3();
+        await Day3(true);
     }
 
     static Task Day1()
@@ -126,23 +126,46 @@ static class Program
         return Task.CompletedTask;
     }
 
-    static Task Day3()
+    static Task Day3(bool enableInstructions = false)
     {
         Console.WriteLine("Welcome to the DAY 3!");
         Console.WriteLine("");
         Console.WriteLine("Started reading input...");
         var inputText = File.ReadAllText(@"input/day3.txt");
         var multiplicationResult = 0;
+        var isEnabled = true;
 
-        var matches = Regex.Matches(inputText, "mul\\([0-9]+,[0-9]+\\)", RegexOptions.IgnoreCase);
+        var multiplyMatches = Regex.Matches(inputText, "mul\\([0-9]+,[0-9]+\\)", RegexOptions.IgnoreCase);
+        var doMatches = Regex.Matches(inputText, "do\\(\\)", RegexOptions.IgnoreCase);
+        var dontMatches = Regex.Matches(inputText, "don't\\(\\)", RegexOptions.IgnoreCase);
 
-        foreach (var match in matches)
+        foreach (var match in multiplyMatches.ToList())
         {
-            var text = match.ToString();
-            var indexOfComma = text.IndexOf(',');
-            var indexOfBracket = text.IndexOf(')');
-            var result = int.Parse(text.Substring(4, indexOfComma - 4)) * int.Parse(text.Substring(indexOfComma + 1, indexOfBracket - 1 - indexOfComma));
-            multiplicationResult += result;
+            // Maybe cache this is possible?
+            var dont = dontMatches.LastOrDefault(x => x.Index < match.Index);
+            var @do = doMatches.LastOrDefault(x => x.Index < match.Index);
+
+            // TODO: Optimize instructions logic
+            if (dont == null)
+                isEnabled = true;
+
+            if (@do == null && dont != null && dont.Index < match.Index)
+                isEnabled = false;
+
+            if (@do != null && dont != null && dont.Index > @do.Index && dont.Index < match.Index)
+                isEnabled = false;
+
+            if (@do != null && dont != null && dont.Index < @do.Index && @do.Index < match.Index)
+                isEnabled = true;
+
+            if (isEnabled && enableInstructions)
+            {
+                var text = match.ToString();
+                var indexOfComma = text.IndexOf(',');
+                var indexOfBracket = text.IndexOf(')');
+                var result = int.Parse(text.Substring(4, indexOfComma - 4)) * int.Parse(text.Substring(indexOfComma + 1, indexOfBracket - 1 - indexOfComma));
+                multiplicationResult += result;
+            }
         }
 
         Console.WriteLine($"Result of the multiplications: {multiplicationResult}");
