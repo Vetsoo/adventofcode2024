@@ -1,11 +1,13 @@
-﻿namespace adventofcode2023;
+﻿using System.Text.RegularExpressions;
+
+namespace adventofcode2023;
 
 static class Program
 {
     static async Task Main(string[] args)
     {
         Console.WriteLine("Advent of code 2024!");
-        await Day2(true);
+        await Day3();
     }
 
     static Task Day1()
@@ -120,6 +122,30 @@ static class Program
         }
 
         Console.WriteLine($"Amount of safe reports: {safeReports}");
+
+        return Task.CompletedTask;
+    }
+
+    static Task Day3()
+    {
+        Console.WriteLine("Welcome to the DAY 3!");
+        Console.WriteLine("");
+        Console.WriteLine("Started reading input...");
+        var inputText = File.ReadAllText(@"input/day3.txt");
+        var multiplicationResult = 0;
+
+        var matches = Regex.Matches(inputText, "mul\\([0-9]+,[0-9]+\\)", RegexOptions.IgnoreCase);
+
+        foreach (var match in matches)
+        {
+            var text = match.ToString();
+            var indexOfComma = text.IndexOf(',');
+            var indexOfBracket = text.IndexOf(')');
+            var result = int.Parse(text.Substring(4, indexOfComma - 4)) * int.Parse(text.Substring(indexOfComma + 1, indexOfBracket - 1 - indexOfComma));
+            multiplicationResult += result;
+        }
+
+        Console.WriteLine($"Result of the multiplications: {multiplicationResult}");
 
         return Task.CompletedTask;
     }
