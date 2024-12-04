@@ -7,7 +7,7 @@ static class Program
     static async Task Main(string[] args)
     {
         Console.WriteLine("Advent of code 2024!");
-        await Day3(true);
+        await Day4();
     }
 
     static Task Day1()
@@ -172,4 +172,66 @@ static class Program
 
         return Task.CompletedTask;
     }
+
+    static Task Day4()
+    {
+        Console.WriteLine("Welcome to the DAY 4!");
+        Console.WriteLine("");
+        Console.WriteLine("Started reading input...");
+        var inputText = File.ReadAllLines(@"input/day4.txt");
+        var wordToFind = "XMAS";
+        var totalOccurancesOfWord = 0;
+
+        int rows = inputText.Length;
+        int cols = inputText[0].Length;
+        char[,] grid = new char[rows, cols];
+
+        for (int i = 0; i < rows; i++)
+        {
+            string currentString = inputText[i];
+            for (int j = 0; j < cols; j++)
+            {
+                grid[i, j] = currentString[j];
+            }
+        }
+
+        int wordLength = wordToFind.Length;
+
+        int[,] directions = {
+            {0, 1},   // right
+            {1, 0},   // down
+            {1, 1},   // down-right
+            {1, -1},  // down-left
+            {0, -1},  // left
+            {-1, 0},  // up
+            {-1, -1}, // up-left
+            {-1, 1}   // up-right
+        };
+
+        for (int row = 0; row < rows; row++)
+        {
+            for (int col = 0; col < cols; col++)
+            {
+                for (int direction = 0; direction < directions.GetLength(0); direction++)
+                {
+                    int newRow = row, newCol = col, k = 0;
+                    while (k < wordLength)
+                    {
+                        if (newRow < 0 || newRow >= rows || newCol < 0 || newCol >= cols || grid[newRow, newCol] != wordToFind[k])
+                            break;
+                        newRow += directions[direction, 0];
+                        newCol += directions[direction, 1];
+                        k++;
+                    }
+                    if (k == wordLength)
+                        totalOccurancesOfWord++;
+                }
+            }
+        }
+
+        Console.WriteLine($"{wordToFind} appears {totalOccurancesOfWord} times.");
+
+        return Task.CompletedTask;
+    }
+
 }
