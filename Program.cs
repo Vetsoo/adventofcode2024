@@ -7,7 +7,7 @@ static class Program
     static async Task Main(string[] args)
     {
         Console.WriteLine("Advent of code 2024!");
-        await Day4();
+        await Day4(true);
     }
 
     static Task Day1()
@@ -173,7 +173,7 @@ static class Program
         return Task.CompletedTask;
     }
 
-    static Task Day4()
+    static Task Day4(bool xMas = false)
     {
         Console.WriteLine("Welcome to the DAY 4!");
         Console.WriteLine("");
@@ -196,8 +196,9 @@ static class Program
         }
 
         int wordLength = wordToFind.Length;
-
-        int[,] directions = {
+        if (!xMas)
+        {
+            int[,] directions = {
             {0, 1},   // right
             {1, 0},   // down
             {1, 1},   // down-right
@@ -208,28 +209,80 @@ static class Program
             {-1, 1}   // up-right
         };
 
-        for (int row = 0; row < rows; row++)
-        {
-            for (int col = 0; col < cols; col++)
+            for (int row = 0; row < rows; row++)
             {
-                for (int direction = 0; direction < directions.GetLength(0); direction++)
+                for (int col = 0; col < cols; col++)
                 {
-                    int newRow = row, newCol = col, k = 0;
-                    while (k < wordLength)
+                    for (int direction = 0; direction < directions.GetLength(0); direction++)
                     {
-                        if (newRow < 0 || newRow >= rows || newCol < 0 || newCol >= cols || grid[newRow, newCol] != wordToFind[k])
-                            break;
-                        newRow += directions[direction, 0];
-                        newCol += directions[direction, 1];
-                        k++;
+                        int newRow = row, newCol = col, k = 0;
+                        while (k < wordLength)
+                        {
+                            if (newRow < 0 || newRow >= rows || newCol < 0 || newCol >= cols || grid[newRow, newCol] != wordToFind[k])
+                                break;
+                            newRow += directions[direction, 0];
+                            newCol += directions[direction, 1];
+                            k++;
+                        }
+                        if (k == wordLength)
+                            totalOccurancesOfWord++;
                     }
-                    if (k == wordLength)
-                        totalOccurancesOfWord++;
                 }
             }
+
+            Console.WriteLine($"{wordToFind} appears {totalOccurancesOfWord} times.");
+        }
+        else
+        {
+            int totalOccurancesOfWordInXShape = 0;
+
+            for (int row = 1; row < rows - 1; row++)
+            {
+                for (int col = 1; col < cols - 1; col++)
+                {
+                    // Check for all possible "X-MAS" patterns --> this is not a good approach, but it works lol
+                    if (
+                        // "MAS" pattern in topLeft to bottomRight
+                        (grid[row - 1, col - 1] == 'M' && grid[row, col] == 'A' && grid[row + 1, col + 1] == 'S' &&
+                         grid[row - 1, col + 1] == 'M' && grid[row + 1, col - 1] == 'S') ||
+
+                        // "MAS" pattern in topLeft to bottomRight & reverse
+                        (grid[row - 1, col - 1] == 'M' && grid[row, col] == 'A' && grid[row + 1, col + 1] == 'S' &&
+                         grid[row - 1, col + 1] == 'S' && grid[row + 1, col - 1] == 'M') ||
+
+                        // "SAM" in topLeft to bottomRight (reverse)
+                        (grid[row - 1, col - 1] == 'S' && grid[row, col] == 'A' && grid[row + 1, col + 1] == 'M' &&
+                         grid[row - 1, col + 1] == 'S' && grid[row + 1, col - 1] == 'M') ||
+
+                        // "SAM" in topLeft to bottomRight (reverse) & normal
+                        (grid[row - 1, col - 1] == 'S' && grid[row, col] == 'A' && grid[row + 1, col + 1] == 'M' &&
+                         grid[row - 1, col + 1] == 'M' && grid[row + 1, col - 1] == 'S') ||
+
+                        // "MAS" pattern in topRight to bottomLeft
+                        (grid[row - 1, col + 1] == 'M' && grid[row, col] == 'A' && grid[row + 1, col - 1] == 'S' &&
+                         grid[row - 1, col - 1] == 'M' && grid[row + 1, col + 1] == 'S') ||
+
+                        // "MAS" pattern in topRight to bottomLeft & reverse
+                        (grid[row - 1, col + 1] == 'M' && grid[row, col] == 'A' && grid[row + 1, col - 1] == 'S' &&
+                         grid[row - 1, col - 1] == 'S' && grid[row + 1, col + 1] == 'M') ||
+
+                        // "SAM" in topRight to bottomLeft (reverse) 
+                        (grid[row - 1, col + 1] == 'S' && grid[row, col] == 'A' && grid[row + 1, col - 1] == 'M' &&
+                         grid[row - 1, col - 1] == 'S' && grid[row + 1, col + 1] == 'M') ||
+
+                        // "SAM" in topRight to bottomLeft (reverse) & normal
+                        (grid[row - 1, col + 1] == 'S' && grid[row, col] == 'A' && grid[row + 1, col - 1] == 'M' &&
+                         grid[row - 1, col - 1] == 'M' && grid[row + 1, col + 1] == 'S')
+                    )
+                    {
+                        totalOccurancesOfWordInXShape++;
+                    }
+                }
+            }
+
+            Console.WriteLine($"{wordToFind} appears {totalOccurancesOfWordInXShape} times in X shape.");
         }
 
-        Console.WriteLine($"{wordToFind} appears {totalOccurancesOfWord} times.");
 
         return Task.CompletedTask;
     }
