@@ -7,7 +7,7 @@ static class Program
     static async Task Main(string[] args)
     {
         Console.WriteLine("Advent of code 2024!");
-        await Day4(true);
+        await Day5();
     }
 
     static Task Day1()
@@ -287,4 +287,90 @@ static class Program
         return Task.CompletedTask;
     }
 
+    static Task Day5()
+    {
+        Console.WriteLine("Welcome to the DAY 5!");
+        Console.WriteLine("");
+        Console.WriteLine("Started reading input...");
+        var inputText = File.ReadAllLines(@"input/day5.txt");
+        var instructions = new List<Tuple<int, int>>();
+        var updates = new List<int[]>();
+        var loadInstructions = true;
+        foreach (var line in inputText)
+        {
+            if (loadInstructions)
+            {
+                if (line == string.Empty)
+                {
+                    loadInstructions = false;
+                    continue;
+                }
+                var splittedLine = line.Split('|');
+                var tuple = new Tuple<int, int>(int.Parse(splittedLine[0]), int.Parse(splittedLine[1]));
+                instructions.Add(tuple);
+            }
+            else
+            {
+                var splittedLine = line.Split(',').Select(x => int.Parse(x)).ToArray();
+                updates.Add(splittedLine);
+            }
+        }
+
+        var linesWithCorrectOrder = new List<int[]>();
+        for (int i = 0; i < updates.Count; i++)
+        {
+            var sequence = updates[i];
+            var isCorrectlyOrdered = true;
+            for (int j = 0; j < updates[i].Length; j++)
+            {
+                var pageNumber = sequence[j];
+                var beforeNumbers = instructions.Where(x => x.Item2 == pageNumber).Select(x => x.Item1);
+                var afterNumbers = instructions.Where(x => x.Item1 == pageNumber).Select(x => x.Item2);
+
+                foreach (var beforeNumber in beforeNumbers)
+                {
+                    var indexOfNumber = Array.IndexOf(sequence, beforeNumber);
+
+                    if (indexOfNumber == -1)
+                        continue;
+
+                    if (indexOfNumber > j)
+                    {
+                        isCorrectlyOrdered = false;
+                        break;
+                    }
+                }
+
+                foreach (var afterNumber in afterNumbers)
+                {
+                    var indexOfNumber = Array.IndexOf(sequence, afterNumber);
+
+                    if (indexOfNumber == -1)
+                        continue;
+
+                    if (indexOfNumber < j)
+                    {
+                        isCorrectlyOrdered = false;
+                        break;
+                    }
+                }
+
+                if (!isCorrectlyOrdered)
+                    break;
+            }
+
+            if (isCorrectlyOrdered)
+                linesWithCorrectOrder.Add(sequence);
+        }
+
+        var sumOfMiddleNumbersOfCorrectlyOrderedUpdates = linesWithCorrectOrder.Select(x =>
+        {
+            var f = x[(x.Length - 1) / 2]; 
+            return f;
+        }).Sum();
+
+        Console.WriteLine($"Sum of the middle page numbers from the correctly-ordered updates: {sumOfMiddleNumbersOfCorrectlyOrderedUpdates}");
+
+        return Task.CompletedTask;
+    }
 }
