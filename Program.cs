@@ -294,7 +294,7 @@ static class Program
         Console.WriteLine("Started reading input...");
         var inputText = File.ReadAllLines(@"input/day5.txt");
         var instructions = new List<Tuple<int, int>>();
-        var updates = new List<int[]>();
+        var updates = new List<List<int>>();
         var loadInstructions = true;
         foreach (var line in inputText)
         {
@@ -311,17 +311,34 @@ static class Program
             }
             else
             {
-                var splittedLine = line.Split(',').Select(x => int.Parse(x)).ToArray();
+                var splittedLine = line.Split(',').Select(x => int.Parse(x)).ToList();
                 updates.Add(splittedLine);
             }
         }
 
-        var linesWithCorrectOrder = new List<int[]>();
+        var linesWithCorrectOrder = new List<List<int>>();
+        var linesWithIncorrectOrder = new Dictionary<int, List<int>>();
         for (int i = 0; i < updates.Count; i++)
         {
             var sequence = updates[i];
             var isCorrectlyOrdered = true;
-            for (int j = 0; j < updates[i].Length; j++)
+            isCorrectlyOrdered = CheckOrder(instructions, updates, linesWithIncorrectOrder, i, sequence, isCorrectlyOrdered);
+
+            if (isCorrectlyOrdered)
+                linesWithCorrectOrder.Add(sequence);
+        }
+
+        var sumOfMiddleNumbersOfCorrectlyOrderedUpdates = linesWithCorrectOrder.Select(x => x[(x.Count - 1) / 2]).Sum();
+        var sumOfMiddleNumbersOfIncorrectlyOrderedUpdates = linesWithIncorrectOrder.Select(x => x.Value[(x.Value.Count - 1) / 2]).Sum();
+
+        Console.WriteLine($"Sum of the middle page numbers from the correctly-ordered updates: {sumOfMiddleNumbersOfCorrectlyOrderedUpdates}");
+        Console.WriteLine($"Sum of the middle page numbers from the incorrectly-ordered updates: {sumOfMiddleNumbersOfIncorrectlyOrderedUpdates}");
+
+        return Task.CompletedTask;
+
+        static bool CheckOrder(List<Tuple<int, int>> instructions, List<List<int>> updates, Dictionary<int, List<int>> linesWithIncorrectOrder, int i, List<int> sequence, bool isCorrectlyOrdered)
+        {
+            for (int j = 0; j < updates[i].Count; j++)
             {
                 var pageNumber = sequence[j];
                 var beforeNumbers = instructions.Where(x => x.Item2 == pageNumber).Select(x => x.Item1);
@@ -329,48 +346,52 @@ static class Program
 
                 foreach (var beforeNumber in beforeNumbers)
                 {
-                    var indexOfNumber = Array.IndexOf(sequence, beforeNumber);
+                    var indexOfNumber = sequence.IndexOf(beforeNumber);
 
                     if (indexOfNumber == -1)
                         continue;
 
                     if (indexOfNumber > j)
                     {
+                        sequence.RemoveAt(indexOfNumber);
+                        var indexToInsertAt = j;
+                        if (j == 0)
+                            indexToInsertAt = 0;
+                        sequence.Insert(indexToInsertAt, beforeNumber);
                         isCorrectlyOrdered = false;
+                        CheckOrder(instructions, updates, linesWithIncorrectOrder, i, sequence, true);
                         break;
                     }
                 }
 
                 foreach (var afterNumber in afterNumbers)
                 {
-                    var indexOfNumber = Array.IndexOf(sequence, afterNumber);
+                    var indexOfNumber = sequence.IndexOf(afterNumber);
 
                     if (indexOfNumber == -1)
                         continue;
 
                     if (indexOfNumber < j)
                     {
+                        sequence.RemoveAt(indexOfNumber);
+                        var indexToInsertAt = j + 1;
+                        if (j == sequence.Count - 1)
+                            indexToInsertAt = sequence.Count - 1;
+                        sequence.Insert(indexToInsertAt, afterNumber);
                         isCorrectlyOrdered = false;
+                        CheckOrder(instructions, updates, linesWithIncorrectOrder, i, sequence, true);
                         break;
                     }
                 }
 
                 if (!isCorrectlyOrdered)
+                {
+                    linesWithIncorrectOrder[i] = sequence;
                     break;
+                }
             }
 
-            if (isCorrectlyOrdered)
-                linesWithCorrectOrder.Add(sequence);
+            return isCorrectlyOrdered;
         }
-
-        var sumOfMiddleNumbersOfCorrectlyOrderedUpdates = linesWithCorrectOrder.Select(x =>
-        {
-            var f = x[(x.Length - 1) / 2]; 
-            return f;
-        }).Sum();
-
-        Console.WriteLine($"Sum of the middle page numbers from the correctly-ordered updates: {sumOfMiddleNumbersOfCorrectlyOrderedUpdates}");
-
-        return Task.CompletedTask;
     }
 }
