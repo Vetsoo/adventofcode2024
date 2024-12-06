@@ -7,7 +7,7 @@ static class Program
     static async Task Main(string[] args)
     {
         Console.WriteLine("Advent of code 2024!");
-        await Day5();
+        await Day6();
     }
 
     static Task Day1()
@@ -393,5 +393,81 @@ static class Program
 
             return isCorrectlyOrdered;
         }
+    }
+
+    static Task Day6()
+    {
+        Console.WriteLine("Welcome to the DAY 6!");
+        Console.WriteLine("");
+        Console.WriteLine("Started reading input...");
+        var inputText = File.ReadAllLines(@"input/day6.txt");
+        var obstruction = '#';
+        var markers = new Dictionary<int, char>{
+            {0, '>'},
+            {1, 'v'},
+            {2, '<'},
+            {3, '^'},
+        };
+
+        int[,] directions = {
+            {0, 1},   // right
+            {1, 0},   // down
+            {0, -1},  // left
+            {-1, 0},  // up
+        };
+
+        int rows = inputText.Length;
+        int cols = inputText[0].Length;
+        char[,] grid = new char[rows, cols];
+        var markerPosition = new Tuple<int, int, int>(0, 0, 0);
+
+        for (int i = 0; i < rows; i++)
+        {
+            string currentString = inputText[i];
+            for (int j = 0; j < cols; j++)
+            {
+                var markerValue = markers.FirstOrDefault(x => x.Value == currentString[j]);
+                if (markerValue.Key != 0)
+                    markerPosition = new Tuple<int, int, int>(markerValue.Key, i, j);
+                grid[i, j] = currentString[j];
+            }
+        }
+
+        var uniquePositions = new List<Tuple<int, int>> { new Tuple<int, int>(markerPosition.Item2, markerPosition.Item3) };
+        var maxX = grid.GetLength(0) - 1;
+        var maxY = grid.GetLength(1) - 1;
+
+        while (true)
+        {
+            var isObstructed = false;
+            var newX = markerPosition.Item2 + directions[markerPosition.Item1, 0];
+            var newY = markerPosition.Item3 + directions[markerPosition.Item1, 1];
+            var newDirection = markerPosition.Item1;
+
+            if (newX < 0 || newX > maxX || newY < 0 || newY > maxY)
+                break;
+
+            if (grid[newX, newY] == obstruction)
+            {
+                newX = markerPosition.Item2;
+                newY = markerPosition.Item3;
+                newDirection = markerPosition.Item1 + 1;
+                if (newDirection >= markers.Count)
+                    newDirection = 0;
+            }
+
+            markerPosition = new Tuple<int, int, int>(newDirection, newX, newY);
+
+            if (!isObstructed)
+            {
+                var notUnique = uniquePositions.Any(x => x.Item1 == newX && x.Item2 == newY);
+                if (!notUnique)
+                    uniquePositions.Add(new Tuple<int, int>(newX, newY));
+            }
+        }
+
+        Console.WriteLine($"Amount of unique positions: {uniquePositions.Count}");
+
+        return Task.CompletedTask;
     }
 }
