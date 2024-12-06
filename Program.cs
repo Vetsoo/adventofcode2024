@@ -419,7 +419,7 @@ static class Program
         int rows = inputText.Length;
         int cols = inputText[0].Length;
         char[,] grid = new char[rows, cols];
-        var markerPosition = new Tuple<int, int, int>(0, 0, 0);
+        var initialMarkerPosition = new Tuple<int, int, int>(0, 0, 0);
 
         for (int i = 0; i < rows; i++)
         {
@@ -428,18 +428,18 @@ static class Program
             {
                 var markerValue = markers.FirstOrDefault(x => x.Value == currentString[j]);
                 if (markerValue.Key != 0)
-                    markerPosition = new Tuple<int, int, int>(markerValue.Key, i, j);
+                    initialMarkerPosition = new Tuple<int, int, int>(markerValue.Key, i, j);
                 grid[i, j] = currentString[j];
             }
         }
 
-        var uniquePositions = new List<Tuple<int, int>> { new Tuple<int, int>(markerPosition.Item2, markerPosition.Item3) };
+        var uniquePositions = new List<Tuple<int, int, int>> { initialMarkerPosition };
+        var markerPosition = initialMarkerPosition;
         var maxX = grid.GetLength(0) - 1;
         var maxY = grid.GetLength(1) - 1;
 
         while (true)
         {
-            var isObstructed = false;
             var newX = markerPosition.Item2 + directions[markerPosition.Item1, 0];
             var newY = markerPosition.Item3 + directions[markerPosition.Item1, 1];
             var newDirection = markerPosition.Item1;
@@ -457,16 +457,75 @@ static class Program
             }
 
             markerPosition = new Tuple<int, int, int>(newDirection, newX, newY);
+            uniquePositions.Add(new Tuple<int, int, int>(newDirection, newX, newY));
+        }
 
-            if (!isObstructed)
+        Console.WriteLine($"Amount of unique positions: {uniquePositions.Select(x => new Tuple<int, int>(x.Item2, x.Item3)).Distinct().Count()}");
+
+        // Masterpiece of bad code & even worse performance. But hey, it works. 
+        var amountOfOptionsForNewObstacles = 0;
+        var startPositions = uniquePositions.Where(x => x.Item2 == initialMarkerPosition.Item2 && x.Item3 == initialMarkerPosition.Item3).ToList();
+        var filteredPositions = uniquePositions.Except(startPositions).ToList();
+        var usedPositions = new List<Tuple<int, int>>();
+        for (var i = 0; i < filteredPositions.Count; i++)
+        {
+            var uniquePosition = filteredPositions[i];
+            if (i > 0 && usedPositions.Any(x => x.Item1 == uniquePosition.Item2 && x.Item2 == uniquePosition.Item3))
+                continue;
+            usedPositions.Add(new(uniquePosition.Item2, uniquePosition.Item3));
+
+            var newPositions = new List<Tuple<int, int, int>>();
+
+            markerPosition = initialMarkerPosition;
+            var newGrid = grid.Clone() as char[,];
+            newGrid![uniquePosition.Item2, uniquePosition.Item3] = obstruction;
+
+            // // print grid
+            // for (int row = 0; row < newGrid.GetLength(0); row++)
+            // {
+            //     for (int col = 0; col < newGrid.GetLength(1); col++)
+            //     {
+            //         Console.Write(newGrid[row, col]);
+            //     }
+            //     Console.WriteLine();
+            // }
+            // Console.WriteLine("---------------------");
+
+            var newObstacleHit = false;
+            while (true)
             {
-                var notUnique = uniquePositions.Any(x => x.Item1 == newX && x.Item2 == newY);
-                if (!notUnique)
-                    uniquePositions.Add(new Tuple<int, int>(newX, newY));
+                var newX = markerPosition.Item2 + directions[markerPosition.Item1, 0];
+                var newY = markerPosition.Item3 + directions[markerPosition.Item1, 1];
+                var newDirection = markerPosition.Item1;
+
+                if (newX < 0 || newX > maxX || newY < 0 || newY > maxY)
+                    break;
+
+                if (newGrid[newX, newY] == obstruction)
+                {
+                    if (newX == uniquePosition.Item2 && newY == uniquePosition.Item3)
+                        newObstacleHit = true;
+                    newX = markerPosition.Item2;
+                    newY = markerPosition.Item3;
+                    newDirection = markerPosition.Item1 + 1;
+                    if (newDirection >= markers.Count)
+                        newDirection = 0;
+                }
+
+                markerPosition = new Tuple<int, int, int>(newDirection, newX, newY);
+
+                if (newObstacleHit && newPositions.Contains(markerPosition))
+                {
+                    amountOfOptionsForNewObstacles++;
+                    break;
+                }
+
+                newPositions.Add(markerPosition);
+
             }
         }
 
-        Console.WriteLine($"Amount of unique positions: {uniquePositions.Count}");
+        Console.WriteLine($"Amount of options for new obstacles: {amountOfOptionsForNewObstacles}");
 
         return Task.CompletedTask;
     }
