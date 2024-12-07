@@ -7,7 +7,7 @@ static class Program
     static async Task Main(string[] args)
     {
         Console.WriteLine("Advent of code 2024!");
-        await Day6();
+        await Day7();
     }
 
     static Task Day1()
@@ -528,5 +528,78 @@ static class Program
         Console.WriteLine($"Amount of options for new obstacles: {amountOfOptionsForNewObstacles}");
 
         return Task.CompletedTask;
+    }
+
+    static Task Day7()
+    {
+        Console.WriteLine("Welcome to the DAY 7!");
+        Console.WriteLine("");
+        Console.WriteLine("Started reading input...");
+        var inputText = File.ReadAllLines(@"input/day7.txt");
+        var operators = new char[2]{
+            '+',
+            '*'
+        };
+        var equations = inputText.Select(x =>
+        {
+            var firstSplit = x.Split(':');
+            var secondSplit = firstSplit[1].Split(" ").Skip(1).Select(x => long.Parse(x)).ToArray();
+
+            var list = new List<long>
+            {
+                long.Parse(firstSplit[0])
+            };
+            list.AddRange(secondSplit);
+            return list;
+        }).ToList();
+        long totalCalibrationResult = 0;
+
+        for (int i = 0; i < equations.Count(); i++)
+        {
+            var equation = equations[i];
+            var testValue = equation[0];
+
+            var numberOfOperators = equation.Count - 2;
+            var possibleOperations = new List<string>();
+
+            GeneratePossibleOperations("", numberOfOperators, operators, possibleOperations);
+
+            foreach (var possible in possibleOperations)
+            {
+                long result = equation[1];
+                for (int g = 0; g < possible.Length; g++)
+                {
+                    var op = possible[g];
+                    if (op == '+')
+                        result += equation[g + 2];
+                    else if (op == '*')
+                        result *= equation[g + 2];
+                }
+
+                if (result == testValue)
+                {
+                    totalCalibrationResult += testValue;
+                    break;
+                }
+            }
+        }
+
+        Console.WriteLine($"Total calibration result: {totalCalibrationResult}");
+
+        return Task.CompletedTask;
+
+        static void GeneratePossibleOperations(string current, int length, char[] chars, List<string> results)
+        {
+            if (current.Length == length)
+            {
+                results.Add(current);
+                return;
+            }
+
+            foreach (var ch in chars)
+            {
+                GeneratePossibleOperations(current + ch, length, chars, results);
+            }
+        }
     }
 }
