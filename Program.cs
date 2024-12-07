@@ -536,9 +536,10 @@ static class Program
         Console.WriteLine("");
         Console.WriteLine("Started reading input...");
         var inputText = File.ReadAllLines(@"input/day7.txt");
-        var operators = new char[2]{
+        var operators = new char[3]{
             '+',
-            '*'
+            '*',
+            '|'
         };
         var equations = inputText.Select(x =>
         {
@@ -562,7 +563,7 @@ static class Program
             var numberOfOperators = equation.Count - 2;
             var possibleOperations = new List<string>();
 
-            GeneratePossibleOperations("", numberOfOperators, operators, possibleOperations);
+            GeneratePossibleOperations("", numberOfOperators, operators[..2], possibleOperations);
 
             foreach (var possible in possibleOperations)
             {
@@ -585,6 +586,42 @@ static class Program
         }
 
         Console.WriteLine($"Total calibration result: {totalCalibrationResult}");
+
+        long newCalibrationResult = 0;
+        for (int i = 0; i < equations.Count(); i++)
+        {
+            var equation = equations[i];
+            var testValue = equation[0];
+
+            var numberOfOperators = equation.Count - 2;
+            var possibleOperations = new List<string>();
+
+            GeneratePossibleOperations("", numberOfOperators, operators, possibleOperations);
+
+            foreach (var possible in possibleOperations)
+            {
+                long result = equation[1];
+                for (int g = 0; g < possible.Length; g++)
+                {
+                    var op = possible[g];
+                    var nextNumber = equation[g + 2];
+                    if (op == '+')
+                        result += equation[g + 2];
+                    else if (op == '*')
+                        result *= equation[g + 2];
+                    else if (op == '|')
+                        result = long.Parse(result.ToString() + nextNumber.ToString());
+                }
+
+                if (result == testValue)
+                {
+                    newCalibrationResult += testValue;
+                    break;
+                }
+            }
+        }
+
+        Console.WriteLine($"New total calibration result: {newCalibrationResult}");
 
         return Task.CompletedTask;
 
