@@ -7,7 +7,7 @@ static class Program
     static async Task Main(string[] args)
     {
         Console.WriteLine("Advent of code 2024!");
-        await Day7();
+        await Day8();
     }
 
     static Task Day1()
@@ -638,5 +638,94 @@ static class Program
                 GeneratePossibleOperations(current + ch, length, chars, results);
             }
         }
+    }
+
+    static Task Day8()
+    {
+        Console.WriteLine("Welcome to the DAY 8!");
+        Console.WriteLine("");
+        Console.WriteLine("Started reading input...");
+        var inputText = File.ReadAllLines(@"input/day8.txt");
+
+        int[,] directions = {
+            {0, 1},   // right
+            {1, 0},   // down
+            {1, 1},   // down-right
+            {1, -1},  // down-left
+            {0, -1},  // left
+            {-1, 0},  // up
+            {-1, -1}, // up-left
+            {-1, 1}   // up-right
+        };
+
+        int[,] oppositeDirections = {
+            {0, -1},  // left
+            {-1, 0},  // up
+            {-1, -1}, // up-left
+            {-1, 1},   // up-right
+            {0, 1},   // right
+            {1, 0},   // down
+            {1, 1},   // down-right
+            {1, -1}  // down-left
+        };
+
+        int rows = inputText.Length;
+        int cols = inputText[0].Length;
+        char[,] grid = new char[rows, cols];
+        var antennasWithFrequencyAndLocation = new Dictionary<char, List<Tuple<int, int>>>();
+        var antinodeLocations = new List<Tuple<char, int, int>>();
+
+        for (int i = 0; i < rows; i++)
+        {
+            string currentString = inputText[i];
+            for (int j = 0; j < cols; j++)
+            {
+                if (currentString[j] != '.')
+                {
+                    var doesExist = antennasWithFrequencyAndLocation.TryGetValue(currentString[j], out var existingValue);
+                    var coords = new Tuple<int, int>(i, j);
+                    if (!doesExist)
+                        existingValue = new List<Tuple<int, int>> { coords };
+                    else
+                        existingValue!.Add(coords);
+                    antennasWithFrequencyAndLocation[currentString[j]] = existingValue;
+                }
+                grid[i, j] = currentString[j];
+            }
+        }
+
+        foreach (var antennaFrequency in antennasWithFrequencyAndLocation)
+        {
+            for (int i = 0; i < antennaFrequency.Value.Count; i++)
+            {
+                var checkPoint = antennaFrequency.Value[i];
+                for (int j = 0; j < antennaFrequency.Value.Count; j++)
+                {
+                    var point = antennaFrequency.Value[j];
+                    if (i == j)
+                        continue;
+
+                    var diffX = checkPoint.Item1 - point.Item1;
+                    var diffY = checkPoint.Item2 - point.Item2;
+
+                    var newX = checkPoint.Item1 + diffX;
+                    var newY = checkPoint.Item2 + diffY;
+
+                    if (newX < 0 || newX > grid.GetLength(0) - 1 || newY < 0 || newY > grid.GetLength(1) - 1)
+                        continue;
+
+                    antinodeLocations.Add(new(antennaFrequency.Key, newX, newY));
+                }
+            }
+        }
+
+        var filteredList = antinodeLocations
+            .GroupBy(x => new { x.Item2, x.Item3 })
+            .Select(g => g.First())
+            .ToList();
+
+        Console.WriteLine($"Amount of unique antinode locations: {filteredList.Count}");
+
+        return Task.CompletedTask;
     }
 }
