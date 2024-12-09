@@ -7,7 +7,7 @@ static class Program
     static async Task Main(string[] args)
     {
         Console.WriteLine("Advent of code 2024!");
-        await Day8();
+        await Day8(true);
     }
 
     static Task Day1()
@@ -640,34 +640,12 @@ static class Program
         }
     }
 
-    static Task Day8()
+    static Task Day8(bool updatedModel = false)
     {
         Console.WriteLine("Welcome to the DAY 8!");
         Console.WriteLine("");
         Console.WriteLine("Started reading input...");
         var inputText = File.ReadAllLines(@"input/day8.txt");
-
-        int[,] directions = {
-            {0, 1},   // right
-            {1, 0},   // down
-            {1, 1},   // down-right
-            {1, -1},  // down-left
-            {0, -1},  // left
-            {-1, 0},  // up
-            {-1, -1}, // up-left
-            {-1, 1}   // up-right
-        };
-
-        int[,] oppositeDirections = {
-            {0, -1},  // left
-            {-1, 0},  // up
-            {-1, -1}, // up-left
-            {-1, 1},   // up-right
-            {0, 1},   // right
-            {1, 0},   // down
-            {1, 1},   // down-right
-            {1, -1}  // down-left
-        };
 
         int rows = inputText.Length;
         int cols = inputText[0].Length;
@@ -702,6 +680,10 @@ static class Program
                 for (int j = 0; j < antennaFrequency.Value.Count; j++)
                 {
                     var point = antennaFrequency.Value[j];
+
+                    if (updatedModel)
+                        antinodeLocations.Add(new(antennaFrequency.Key, point.Item1, point.Item2));
+
                     if (i == j)
                         continue;
 
@@ -715,6 +697,17 @@ static class Program
                         continue;
 
                     antinodeLocations.Add(new(antennaFrequency.Key, newX, newY));
+
+                    while (updatedModel)
+                    {
+                        newX += diffX;
+                        newY += diffY;
+
+                        if (newX < 0 || newX > grid.GetLength(0) - 1 || newY < 0 || newY > grid.GetLength(1) - 1)
+                            break;
+
+                        antinodeLocations.Add(new(antennaFrequency.Key, newX, newY));
+                    }
                 }
             }
         }
