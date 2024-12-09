@@ -7,7 +7,7 @@ static class Program
     static async Task Main(string[] args)
     {
         Console.WriteLine("Advent of code 2024!");
-        await Day9();
+        await Day9(true);
     }
 
     static Task Day1()
@@ -722,13 +722,14 @@ static class Program
         return Task.CompletedTask;
     }
 
-    static Task Day9()
+    static Task Day9(bool moveCompleteFiles = false)
     {
         Console.WriteLine("Welcome to the DAY 9!");
         Console.WriteLine("");
         Console.WriteLine("Started reading input...");
         var inputText = File.ReadAllText(@"input/day9.txt");
         var workingList = new List<int>();
+        var metaDataList = new List<int>();
         var fileId = 0;
         for (int i = 0; i < inputText.Length; i += 2)
         {
@@ -740,27 +741,84 @@ static class Program
             for (int j = 0; j < lengthOfFile; j++)
             {
                 workingList.Add(fileId);
+                metaDataList.Add(lengthOfFile);
             }
 
             for (int j = 0; j < freeSpace; j++)
             {
                 workingList.Add(-1);
+                metaDataList.Add(freeSpace);
             }
 
             fileId++;
         }
-  
-        for (int i = workingList.Count - 1; i >= 0; i--)
+
+        if (!moveCompleteFiles)
         {
-            int firstFreeIndex = workingList.IndexOf(-1);
+            for (int i = workingList.Count - 1; i >= 0; i--)
+            {
+                int firstFreeIndex = workingList.IndexOf(-1);
 
-            if (firstFreeIndex >= i) 
-                break;
+                if (firstFreeIndex >= i)
+                    break;
 
-            workingList[firstFreeIndex] = workingList[i];
-            workingList[i] = -1;
+                workingList[firstFreeIndex] = workingList[i];
+                workingList[i] = -1;
+            }
         }
-        
+        else
+        {
+            var i = workingList.Count - 1;
+            while (i >= 0)
+            {
+                if (workingList.IndexOf(-1) > i)
+                    break;
+                    
+                var isEmptyPoint = workingList[i] == -1;
+                if (isEmptyPoint)
+                {
+                    var amountToSkip = metaDataList[i];
+                    i -= amountToSkip;
+                    continue;
+                }
+                var amountOfFreeSpaceNeeded = metaDataList[i];
+
+                var listOfFreeIndexes = new List<int>();
+                var j = 0;
+                var checkPoint = 0;
+                while (j < amountOfFreeSpaceNeeded && checkPoint < workingList.Count - 1 && checkPoint < i)
+                {
+                    var lastFreeIndex = listOfFreeIndexes.Any() ? listOfFreeIndexes.Last() : -1;
+                    var freeIndex = workingList.FindIndex(checkPoint, x => x == -1);
+                    if (lastFreeIndex == -1 || freeIndex - lastFreeIndex == 1)
+                    {
+                        listOfFreeIndexes.Add(freeIndex);
+                        checkPoint = freeIndex + 1;
+                        j++;
+                    }
+                    else
+                    {
+                        listOfFreeIndexes.Clear();
+                        checkPoint = freeIndex;
+                        j = 0;
+                    }
+                }
+
+                var counter = 0;
+                foreach (var freeIndex in listOfFreeIndexes)
+                {
+                    workingList[freeIndex] = workingList[i - counter];
+                    workingList[i - counter] = -1;
+                    counter++;
+                }
+
+                if (counter == 0)
+                    counter = amountOfFreeSpaceNeeded;
+
+                i -= counter;
+            }
+        }
+
         long checkSum = 0;
 
         for (int i = 0; i < workingList.Count; i++)
