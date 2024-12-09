@@ -7,7 +7,7 @@ static class Program
     static async Task Main(string[] args)
     {
         Console.WriteLine("Advent of code 2024!");
-        await Day8(true);
+        await Day9();
     }
 
     static Task Day1()
@@ -718,6 +718,57 @@ static class Program
             .ToList();
 
         Console.WriteLine($"Amount of unique antinode locations: {filteredList.Count}");
+
+        return Task.CompletedTask;
+    }
+
+    static Task Day9()
+    {
+        Console.WriteLine("Welcome to the DAY 9!");
+        Console.WriteLine("");
+        Console.WriteLine("Started reading input...");
+        var inputText = File.ReadAllText(@"input/day9.txt");
+        var workingList = new List<int>();
+        var fileId = 0;
+        for (int i = 0; i < inputText.Length; i += 2)
+        {
+            var lengthOfFile = int.Parse(inputText[i].ToString());
+            var freeSpace = 0;
+            if (i + 1 < inputText.Length)
+                freeSpace = int.Parse(inputText[i + 1].ToString());
+
+            for (int j = 0; j < lengthOfFile; j++)
+            {
+                workingList.Add(fileId);
+            }
+
+            for (int j = 0; j < freeSpace; j++)
+            {
+                workingList.Add(-1);
+            }
+
+            fileId++;
+        }
+  
+        for (int i = workingList.Count - 1; i >= 0; i--)
+        {
+            int firstFreeIndex = workingList.IndexOf(-1);
+
+            if (firstFreeIndex >= i) 
+                break;
+
+            workingList[firstFreeIndex] = workingList[i];
+            workingList[i] = -1;
+        }
+        
+        long checkSum = 0;
+
+        for (int i = 0; i < workingList.Count; i++)
+        {
+            checkSum += workingList[i] != -1 ? workingList[i] * i : 0;
+        }
+
+        Console.WriteLine($"Filesystem checksum: {checkSum}");
 
         return Task.CompletedTask;
     }
