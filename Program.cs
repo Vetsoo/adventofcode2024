@@ -7,7 +7,7 @@ static class Program
     static async Task Main(string[] args)
     {
         Console.WriteLine("Advent of code 2024!");
-        await Day9(true);
+        await Day10();
     }
 
     static Task Day1()
@@ -773,7 +773,7 @@ static class Program
             {
                 if (workingList.IndexOf(-1) > i)
                     break;
-                    
+
                 var isEmptyPoint = workingList[i] == -1;
                 if (isEmptyPoint)
                 {
@@ -829,5 +829,84 @@ static class Program
         Console.WriteLine($"Filesystem checksum: {checkSum}");
 
         return Task.CompletedTask;
+    }
+
+    static Task Day10()
+    {
+        Console.WriteLine("Welcome to the DAY 10!");
+        Console.WriteLine("");
+        Console.WriteLine("Started reading input...");
+        var inputText = File.ReadAllLines(@"input/day10.txt");
+
+        int rows = inputText.Length;
+        int cols = inputText[0].Length;
+        int[,] grid = new int[rows, cols];
+
+        int sumOfScores = 0;
+
+        for (int i = 0; i < rows; i++)
+        {
+            string currentString = inputText[i];
+            for (int j = 0; j < cols; j++)
+            {
+                grid[i, j] = int.Parse(currentString[j].ToString());
+            }
+        }
+
+        for (int i = 0; i < rows; i++)
+        {
+            for (int j = 0; j < cols; j++)
+            {
+                if (grid[i, j] == 0) // Trailhead
+                {
+                    var visitedTiles = new List<Tuple<int, int>>();
+                    var trailheadScore = CalculateTrailheadScore(grid, i, j, visitedTiles);
+                    sumOfScores += trailheadScore;
+                    Console.WriteLine($"Score for trailhead: {trailheadScore}");
+                }
+            }
+        }
+
+        Console.WriteLine($"Sum of trailhead scores: {sumOfScores}");
+
+        return Task.CompletedTask;
+
+        static int CalculateTrailheadScore(int[,] grid, int startX, int startY, List<Tuple<int, int>> visitedTiles)
+        {
+            int[,] directions = {
+            {0, 1},   // right
+            {1, 0},   // down
+            {0, -1},  // left
+            {-1, 0}  // up
+            };
+
+            int rows = grid.GetLength(0);
+            int cols = grid.GetLength(1);
+
+            int score = 0;
+            int previousStep = grid[startX, startY];
+
+            for (int i = 0; i < directions.GetLength(0); i++)
+            {
+                var newRow = startX + directions[i, 0];
+                var newCol = startY + directions[i, 1];
+                if (newRow < 0 || newRow >= rows || newCol < 0 || newCol >= cols)
+                    continue;
+
+                int newStep = grid[newRow, newCol];
+                if (newStep - previousStep != 1)
+                    continue;
+
+                if (newStep == 9 && !visitedTiles.Any(x => x.Item1 == newRow && x.Item2 == newCol))
+                {
+                    visitedTiles.Add(new(newRow, newCol));
+                    score++;
+                }
+
+                score += CalculateTrailheadScore(grid, newRow, newCol, visitedTiles);
+            }
+
+            return score;
+        }
     }
 }
