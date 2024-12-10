@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Reflection.Metadata;
+using System.Text.RegularExpressions;
 
 namespace adventofcode2023;
 
@@ -7,7 +8,7 @@ static class Program
     static async Task Main(string[] args)
     {
         Console.WriteLine("Advent of code 2024!");
-        await Day10();
+        await Day10(true);
     }
 
     static Task Day1()
@@ -831,7 +832,7 @@ static class Program
         return Task.CompletedTask;
     }
 
-    static Task Day10()
+    static Task Day10(bool useNewTrailScore = false)
     {
         Console.WriteLine("Welcome to the DAY 10!");
         Console.WriteLine("");
@@ -860,7 +861,7 @@ static class Program
                 if (grid[i, j] == 0) // Trailhead
                 {
                     var visitedTiles = new List<Tuple<int, int>>();
-                    var trailheadScore = CalculateTrailheadScore(grid, i, j, visitedTiles);
+                    var trailheadScore = CalculateTrailheadScore(grid, i, j, visitedTiles, useNewTrailScore);
                     sumOfScores += trailheadScore;
                     Console.WriteLine($"Score for trailhead: {trailheadScore}");
                 }
@@ -871,7 +872,7 @@ static class Program
 
         return Task.CompletedTask;
 
-        static int CalculateTrailheadScore(int[,] grid, int startX, int startY, List<Tuple<int, int>> visitedTiles)
+        static int CalculateTrailheadScore(int[,] grid, int startX, int startY, List<Tuple<int, int>> visitedTiles, bool useNewTrailScore)
         {
             int[,] directions = {
             {0, 1},   // right
@@ -897,13 +898,24 @@ static class Program
                 if (newStep - previousStep != 1)
                     continue;
 
-                if (newStep == 9 && !visitedTiles.Any(x => x.Item1 == newRow && x.Item2 == newCol))
+                if (!useNewTrailScore)
                 {
-                    visitedTiles.Add(new(newRow, newCol));
-                    score++;
+                    if (newStep == 9 && !visitedTiles.Any(x => x.Item1 == newRow && x.Item2 == newCol))
+                    {
+                        visitedTiles.Add(new(newRow, newCol));
+                        score++;
+                    }
+                }
+                else
+                {
+                    if (newStep == 9)
+                    {
+                        visitedTiles.Add(new(newRow, newCol));
+                        score++;
+                    }
                 }
 
-                score += CalculateTrailheadScore(grid, newRow, newCol, visitedTiles);
+                score += CalculateTrailheadScore(grid, newRow, newCol, visitedTiles, useNewTrailScore);
             }
 
             return score;
