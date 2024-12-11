@@ -1,14 +1,13 @@
-﻿using System.Reflection.Metadata;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
-namespace adventofcode2023;
+namespace adventofcode2024;
 
 static class Program
 {
     static async Task Main(string[] args)
     {
         Console.WriteLine("Advent of code 2024!");
-        await Day10(true);
+        await Day11();
     }
 
     static Task Day1()
@@ -920,5 +919,46 @@ static class Program
 
             return score;
         }
+    }
+
+    static Task Day11()
+    {
+        Console.WriteLine("Welcome to the DAY 11!");
+        Console.WriteLine("");
+        Console.WriteLine("Started reading input...");
+        var inputText = File.ReadAllText(@"input/day11.txt");
+        var lineOfStones = inputText.Split(" ").Select(x => long.Parse(x)).ToList();
+        var amountOfBlinks = 25;
+
+        var counter = 0;
+        while(counter < amountOfBlinks)
+        {
+            var index = 0;
+            while(index < lineOfStones.Count)
+            {
+                var currentStone = lineOfStones[index];
+
+                if (currentStone == 0)
+                    lineOfStones[index] = 1;
+                else if (currentStone.ToString().Length % 2 == 0)
+                {
+                    var value = currentStone.ToString();
+                    var firstHalf = value.Substring(0, value.Length/2);
+                    var secondHalf = value.Substring(value.Length/2);
+                    lineOfStones[index] = int.Parse(firstHalf);
+                    lineOfStones.Insert(index + 1, int.Parse(secondHalf));
+                    index++;
+                }
+                else 
+                    lineOfStones[index] = lineOfStones[index] * 2024;
+
+                index++;
+            }
+            counter++;
+        }
+
+        Console.WriteLine($"Amount of stones after {amountOfBlinks} blinks: {lineOfStones.Count}");
+
+        return Task.CompletedTask;
     }
 }
