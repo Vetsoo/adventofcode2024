@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Security.Cryptography.X509Certificates;
+using System.Text.RegularExpressions;
 
 namespace adventofcode2024;
 
@@ -7,7 +8,7 @@ static class Program
     static async Task Main(string[] args)
     {
         Console.WriteLine("Advent of code 2024!");
-        await Day11();
+        await Day12();
     }
 
     static Task Day1()
@@ -972,6 +973,102 @@ static class Program
             }
 
             return temporaryListOfStones;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    static Task Day12()
+    {
+        Console.WriteLine("Welcome to the DAY 12!");
+        Console.WriteLine("");
+        Console.WriteLine("Started reading input...");
+        var inputText = File.ReadAllLines(@"input/day12.txt");
+
+        var totalPriceOfFencing = 0;
+        var groupedAreas = new List<Tuple<char, int, int, List<Tuple<int, int>>>>();
+
+        int rows = inputText.Length;
+        int cols = inputText[0].Length;
+        char[,] grid = new char[rows, cols];
+
+        for (int i = 0; i < rows; i++)
+        {
+            string currentString = inputText[i];
+            for (int j = 0; j < cols; j++)
+            {
+                grid[i, j] = currentString[j];
+            }
+        }
+
+        int[,] directions = {
+            {0, 1},   // right
+            {1, 0},   // down
+            {0, -1},  // left
+            {-1, 0}  // up
+        };
+
+        for (int i = 0; i < rows; i++)
+        {
+            for (int j = 0; j < cols; j++)
+            {
+                var plant = grid[i, j];
+                var newFences = 0;
+                for (int direction = 0; direction < directions.GetLength(0); direction++)
+                {
+                    var newRow = i + directions[direction, 0];
+                    var newCol = j + directions[direction, 1];
+
+                    if (newRow < 0 || newRow >= rows || newCol < 0 || newCol >= cols || grid[newRow, newCol] != plant)
+                        newFences++;
+                }
+
+                var filteredAreas = groupedAreas.Where(x => x.Item1 == plant && IsPartOfRegion(x.Item4, i, j, directions)).ToList();
+                if (filteredAreas.Count > 1)
+                {
+                    // group areas
+                    var plantId = filteredAreas.First().Item1;
+                    var area = filteredAreas.Select(x => x.Item2).Sum();
+                    var fences = filteredAreas.Select(x => x.Item3).Sum();
+                    var points = filteredAreas.SelectMany(x => x.Item4).ToList();
+                    groupedAreas.Add(new(plantId, area, fences, points));     
+                    filteredAreas.ForEach(x => groupedAreas.Remove(x));            
+                }
+
+                if (filteredAreas.Count > 0)
+                {
+                    var dataForPlant = groupedAreas.First(x => x.Item1 == plant && IsPartOfRegion(x.Item4, i, j, directions));
+                    groupedAreas.Remove(dataForPlant);
+                    dataForPlant.Item4.Add(new(i, j));
+                    groupedAreas.Add(new Tuple<char, int, int, List<Tuple<int, int>>>(dataForPlant.Item1, dataForPlant.Item2 + 1, dataForPlant.Item3 + newFences, dataForPlant.Item4));
+                }
+                else
+                {
+                    var newPoints = new List<Tuple<int, int>>
+                    {
+                        new(i, j)
+                    };
+                    groupedAreas.Add(new Tuple<char, int, int, List<Tuple<int, int>>>(plant, 1, newFences, newPoints));
+                }
+            }
+        }
+
+        totalPriceOfFencing = groupedAreas.Select(x => x.Item2 * x.Item3).Sum();
+
+        Console.WriteLine($"Total price for all the fence needed: {totalPriceOfFencing}");
+
+        static bool IsPartOfRegion(List<Tuple<int, int>> areaPoints, int row, int col, int[,] directions)
+        {
+            for (int direction = 0; direction < directions.GetLength(0); direction++)
+            {
+                var newRow = row + directions[direction, 0];
+                var newCol = col + directions[direction, 1];
+
+                if (areaPoints.Contains(new Tuple<int, int>(newRow, newCol)))
+                    return true;
+            }
+
+            return false;
         }
 
         return Task.CompletedTask;
