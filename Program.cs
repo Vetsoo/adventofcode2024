@@ -927,37 +927,52 @@ static class Program
         Console.WriteLine("");
         Console.WriteLine("Started reading input...");
         var inputText = File.ReadAllText(@"input/day11.txt");
-        var lineOfStones = inputText.Split(" ").Select(x => long.Parse(x)).ToList();
-        var amountOfBlinks = 25;
+        var lineOfStones = inputText.Split(" ");
 
-        var counter = 0;
-        while(counter < amountOfBlinks)
+        var dictionaryOfStones = new Dictionary<string, long>();
+        foreach (var stone in lineOfStones)
+            dictionaryOfStones.Add(stone, 1);
+
+        var amountOfBlinks = 75;
+
+        for (int i = 0; i < amountOfBlinks; i++)
+            dictionaryOfStones = Blink(dictionaryOfStones);
+
+        Console.WriteLine($"Amount of stones after {amountOfBlinks} blinks: {dictionaryOfStones.Values.Sum()}");
+
+        Dictionary<string, long> Blink(Dictionary<string, long> listOfStones)
         {
-            var index = 0;
-            while(index < lineOfStones.Count)
+            Dictionary<string, long> temporaryListOfStones = new();
+
+            // Group stones of the same value to minimize the list of stones.
+            foreach (var stone in listOfStones)
             {
-                var currentStone = lineOfStones[index];
-
-                if (currentStone == 0)
-                    lineOfStones[index] = 1;
-                else if (currentStone.ToString().Length % 2 == 0)
+                if (stone.Key == "0")
                 {
-                    var value = currentStone.ToString();
-                    var firstHalf = value.Substring(0, value.Length/2);
-                    var secondHalf = value.Substring(value.Length/2);
-                    lineOfStones[index] = int.Parse(firstHalf);
-                    lineOfStones.Insert(index + 1, int.Parse(secondHalf));
-                    index++;
+                    if (!temporaryListOfStones.TryAdd("1", listOfStones[stone.Key]))
+                        temporaryListOfStones["1"] += listOfStones[stone.Key];
                 }
-                else 
-                    lineOfStones[index] = lineOfStones[index] * 2024;
+                else if (stone.Key.Length % 2 == 0)
+                {
+                    string firstHalf = stone.Key.Substring(0, stone.Key.Length / 2);
+                    string secondHalf = stone.Key.Substring(stone.Key.Length / 2);
+                    secondHalf = long.Parse(secondHalf).ToString(); // Trim 0s
 
-                index++;
+                    if (!temporaryListOfStones.TryAdd(firstHalf, listOfStones[stone.Key]))
+                        temporaryListOfStones[firstHalf] += listOfStones[stone.Key];
+                    if (!temporaryListOfStones.TryAdd(secondHalf, listOfStones[stone.Key]))
+                        temporaryListOfStones[secondHalf] += listOfStones[stone.Key];
+                }
+                else
+                {
+                    string parsed = (long.Parse(stone.Key) * 2024).ToString();
+                    if (!temporaryListOfStones.TryAdd(parsed, listOfStones[stone.Key]))
+                        temporaryListOfStones[parsed] += listOfStones[stone.Key];
+                }
             }
-            counter++;
-        }
 
-        Console.WriteLine($"Amount of stones after {amountOfBlinks} blinks: {lineOfStones.Count}");
+            return temporaryListOfStones;
+        }
 
         return Task.CompletedTask;
     }
